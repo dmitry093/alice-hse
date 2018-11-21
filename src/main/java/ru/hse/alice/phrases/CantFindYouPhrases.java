@@ -10,8 +10,9 @@ public class CantFindYouPhrases implements IResponsePhrase {
     private static final List<String> phrases = new ArrayList<>();
 
     static {
-        phrases.add("Извини, не могу тебя найти. Повтори, пожалуйста.");
-        phrases.add("Не вижу тебя в списке. Ты точно назвал свое имя?");
+        phrases.add("Извини, не могу тебя найти.\nПопробуй еще раз.");
+        phrases.add("Не вижу тебя в списке.\nПовтори, может я что-то не так расслышала.");
+        phrases.add("Вроде бы видела тебя, но сейчас не нахожу.\nНазови свое имя еще раз.");
     }
 
     @Override
