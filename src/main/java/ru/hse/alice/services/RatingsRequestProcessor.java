@@ -7,18 +7,17 @@ import ru.hse.alice.actions.GoodByeInterpretations;
 import ru.hse.alice.actions.ShowRatingInterpretations;
 import ru.hse.alice.contracts.IRequestProcessor;
 import ru.hse.alice.contracts.IUserService;
-import ru.hse.alice.models.dtos.Button;
-import ru.hse.alice.models.dtos.Response;
-import ru.hse.alice.models.dtos.SkillWebhookRequest;
-import ru.hse.alice.models.dtos.SkillWebhookResponse;
-import ru.hse.alice.phrases.DontUnderstandPhrases;
+import ru.hse.alice.models.User;
+import ru.hse.alice.models.dtos.*;
+import ru.hse.alice.phrases.CantFindYouPhrases;
 import ru.hse.alice.phrases.GoodByePhrases;
 import ru.hse.alice.phrases.GreetingPhrases;
-import ru.hse.alice.phrases.SayYourNamePhrases;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -26,10 +25,11 @@ public class RatingsRequestProcessor implements IRequestProcessor {
     private final IUserService userService;
     private GreetingPhrases greetingPhrases;
     private GoodByePhrases goodByePhrases;
-    private SayYourNamePhrases sayYourNamePhrases;
     private ShowRatingInterpretations showRatingInterpretations;
     private GoodByeInterpretations goodByeInterpretations;
-    private DontUnderstandPhrases dontUnderstandPhrases;
+    private CantFindYouPhrases cantFindYouPhrases;
+
+    private Map<String, User> userSessions;
 
     public RatingsRequestProcessor(IUserService userService) {
         if (userService == null) {
@@ -38,11 +38,12 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         this.userService = userService;
         this.greetingPhrases = new GreetingPhrases();
         this.goodByePhrases = new GoodByePhrases();
-        this.sayYourNamePhrases = new SayYourNamePhrases();
 
         this.showRatingInterpretations = new ShowRatingInterpretations();
         this.goodByeInterpretations = new GoodByeInterpretations();
-        this.dontUnderstandPhrases = new DontUnderstandPhrases();
+        this.cantFindYouPhrases = new CantFindYouPhrases();
+
+        this.userSessions = new HashMap<>();
     }
 
     @NotNull
@@ -71,28 +72,50 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             return buildResponse(
                     request,
                     greetingPhrases.getRandom(),
-                    Arrays.asList(new Button("Узнать свой рейтинг")),
+                    null,
                     false
             );
         }
 
-        String command = request.getRequest().getCommand();
+        Payload payload = request.getRequest().getPayload();
+        String sessionId = request.getSession().getSessionId();
 
-        if (showRatingInterpretations.contains(command)) {
-            return buildResponse(request, sayYourNamePhrases.getRandom(), null, false);
-        }
+//        if (payload == null) {
+            String command = request.getRequest().getCommand();
 
 
-        if (goodByeInterpretations.contains(command)) {
-            return buildResponse(request, goodByePhrases.getRandom(), null, true);
-        }
+            if (showRatingInterpretations.contains(command)) {
+                return buildResponse(
+                        request,
+                        "тут будет рейтинг",
+                        null,
+                        false
+                );
+            }
 
-        return buildResponse(
-                request,
-                dontUnderstandPhrases.getRandom(),
-                Arrays.asList(new Button("Узнать свой рейтинг")),
-                false
-        );
+            if (goodByeInterpretations.contains(command)) {
+                if (userSessions.containsKey(sessionId)){
+                    userSessions.remove(sessionId);
+                }
+                return buildResponse(request, goodByePhrases.getRandom(), null, true);
+            }
 
+            if (!userService.userExists(command)) {
+                return buildResponse(request, cantFindYouPhrases.getRandom(), null, false);
+            } else {
+                User currentUser = userService.getUser(command);
+                this.userSessions.put(request.getSession().getSessionId(), currentUser);
+                if (!currentUser.getIsAdmin()) {
+                    return buildResponse(
+                            request,
+                            currentUser.getName() + ", ты можешь через меня:",
+                            Collections.singletonList(new Button("Узнать свой рейтинг", new Payload("showrating"))),
+                            false
+                    );
+                }
+            }
+
+//        }
+        return null;
     }
 }

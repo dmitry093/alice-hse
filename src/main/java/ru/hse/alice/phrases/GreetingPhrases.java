@@ -10,9 +10,9 @@ public class GreetingPhrases implements IResponsePhrase {
     private static final List<String> phrases = new ArrayList<>();
 
     static {
-        phrases.add("Привет!\nЧем я могу помочь?");
-        phrases.add("Хеллоу!\nВот что я умею!");
-        phrases.add("Приветствую!\nЧем могу быть полезна?");
+        phrases.add("Привет!\nКак тебя зовут?");
+        phrases.add("Хеллоу!\nКак к тебе обращаться?");
+        phrases.add("Приветствую!\nКак могу к тебе обратиться?");
     }
 
     @Override

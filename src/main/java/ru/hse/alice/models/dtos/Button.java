@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NonNull;
+import org.springframework.lang.Nullable;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
@@ -14,7 +15,7 @@ public class Button {
 
     @JsonProperty("payload")
     @JsonInclude(NON_NULL)
-    private Object payload;
+    private Payload payload;
 
     @JsonProperty("url")
     @JsonInclude(NON_NULL)
@@ -26,7 +27,8 @@ public class Button {
 
     Button() { }
 
-    public Button(@NonNull String title) {
+    public Button(@NonNull String title, @Nullable Payload payload) {
         this.title = title;
+        this.payload = payload;
     }
 }

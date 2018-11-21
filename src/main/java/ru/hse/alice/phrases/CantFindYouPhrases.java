@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class SayYourNamePhrases implements IResponsePhrase {
+public class CantFindYouPhrases implements IResponsePhrase {
     private static final List<String> phrases = new ArrayList<>();
 
     static {
-        phrases.add("Сейчас-сейчас!\nКак тебя зовут?");
-        phrases.add("Одну минутку...\nЧьи оценки будем смотреть?");
-        phrases.add("Как тебя зовут?");
+        phrases.add("Извини, не могу тебя найти. Повтори, пожалуйста.");
+        phrases.add("Не вижу тебя в списке. Ты точно назвал свое имя?");
     }
 
     @Override

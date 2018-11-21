@@ -16,4 +16,7 @@ public class Request {
 
     @JsonProperty("markup")
     private RequestMarkup markup;
+
+    @JsonProperty("payload")
+    private Payload payload;
 }
