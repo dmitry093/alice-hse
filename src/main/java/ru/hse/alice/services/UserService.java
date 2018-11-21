@@ -15,6 +15,7 @@ public class UserService implements IUserService {
 
     public UserService() {
         mapUsers = new HashMap<>();
+        mapUsers.put("Админ", new User("Админ", 10.0, true));
     }
 
     @Override
