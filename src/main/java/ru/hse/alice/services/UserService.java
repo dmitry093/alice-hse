@@ -20,24 +20,12 @@ public class UserService implements IUserService {
 
     @Override
     public Boolean userExists(@Nullable String firstName, @Nullable String lastName) {
-        if (firstName == null){
-            firstName = "";
-        }
-        if (lastName == null){
-            lastName = "";
-        }
         return mapUsers.containsKey(firstName.toLowerCase() + lastName.toLowerCase());
     }
 
     @Nullable
     @Override
     public User getUser(@Nullable String firstName, @Nullable String lastName) {
-        if (firstName == null){
-            firstName = "";
-        }
-        if (lastName == null){
-            lastName = "";
-        }
         if (!userExists(firstName, lastName)) {
             return null;
         }

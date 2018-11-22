@@ -96,13 +96,25 @@ public class RatingsRequestProcessor implements IRequestProcessor {
 
             User currentUser = userSessions.get(sessionId);
             if (Objects.equals(payload.get("button_command"), "showrating")) {
-                return buildResponse(
-                        request,
-                        currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
-                        generateButtons(currentUser.getIsAdmin()),
-                        null,
-                        true
-                );
+                Double rating = currentUser.getRating();
+                if (rating != null) {
+                    return buildResponse(
+                            request,
+                            currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
+                            generateButtons(currentUser.getIsAdmin()),
+                            null,
+                            true
+                    );
+                }
+                else{
+                    return buildResponse(
+                            request,
+                            currentUser.getFirstName() + "!\nТвой рейтинг еще не заполнен!\nПопроси у администратора заполнить журнал.\nСделать что-то еще?",
+                            generateButtons(currentUser.getIsAdmin()),
+                            null,
+                            true
+                    );
+                }
             }
 
             return buildResponse(
@@ -164,6 +176,13 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                     String firstName = nameEntity.get("first_name");
                     String lastName = nameEntity.get("last_name");
 
+                    if (firstName == null){
+                        firstName = "";
+                    }
+                    if (lastName == null){
+                        lastName = "";
+                    }
+
                     if (!userService.userExists(firstName, lastName)) {
                         return buildResponse(
                                 request,
@@ -198,13 +217,25 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             } else {
                 User currentUser = userSessions.get(sessionId);
                 if (containsKeyWord(command, ShowRatingInterpretations.keywords)) {
-                    return buildResponse(
-                            request,
-                            currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
-                            generateButtons(currentUser.getIsAdmin()),
-                            null,
-                            true
-                    );
+                    Double rating = currentUser.getRating();
+                    if (rating != null) {
+                        return buildResponse(
+                                request,
+                                currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
+                                generateButtons(currentUser.getIsAdmin()),
+                                null,
+                                true
+                        );
+                    }
+                    else{
+                        return buildResponse(
+                                request,
+                                currentUser.getFirstName() + "!\nТвой рейтинг еще не заполнен!\nПопроси у администратора заполнить журнал.\nСделать что-то еще?",
+                                generateButtons(currentUser.getIsAdmin()),
+                                null,
+                                true
+                        );
+                    }
                 }
 
                 if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
@@ -230,7 +261,6 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             }
         }
     }
-
 
     private Boolean testForLove(@Nullable String command) {
         if (command == null) {
