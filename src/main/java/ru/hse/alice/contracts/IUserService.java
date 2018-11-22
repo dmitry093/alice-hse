@@ -1,6 +1,6 @@
 package ru.hse.alice.contracts;
 
-import ru.hse.alice.models.User;
+import ru.hse.alice.models.dtos.User;
 
 import java.util.List;
 

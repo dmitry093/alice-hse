@@ -9,8 +9,8 @@ import ru.hse.alice.contracts.IUserService;
 import ru.hse.alice.keywords.GoodByeInterpretations;
 import ru.hse.alice.keywords.GreetingInterpretations;
 import ru.hse.alice.keywords.ShowRatingInterpretations;
-import ru.hse.alice.models.Payload;
-import ru.hse.alice.models.User;
+import ru.hse.alice.models.dtos.Payload;
+import ru.hse.alice.models.dtos.User;
 import ru.hse.alice.models.dtos.*;
 import ru.hse.alice.phrases.*;
 

@@ -4,7 +4,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import ru.hse.alice.contracts.IUserService;
-import ru.hse.alice.models.User;
+import ru.hse.alice.models.dtos.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;

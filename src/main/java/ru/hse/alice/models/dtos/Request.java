@@ -2,7 +2,6 @@ package ru.hse.alice.models.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import ru.hse.alice.models.Payload;
 
 @Data
 public class Request {

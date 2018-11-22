@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NonNull;
 import org.springframework.lang.Nullable;
-import ru.hse.alice.models.Payload;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 

@@ -1,15 +1,15 @@
 package ru.hse.alice.controllers;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.hse.alice.contracts.IRequestProcessor;
 import ru.hse.alice.contracts.IUserService;
-import ru.hse.alice.models.User;
+import ru.hse.alice.models.dtos.User;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/admin")
 public class AdminController {
     private IRequestProcessor processor;
     private IUserService userService;
@@ -25,12 +25,19 @@ public class AdminController {
         this.userService = userService;
     }
 
-    @RequestMapping(value = "/users")
+    @PostMapping(value = "/user/")
+    public User saveUser(@RequestBody User user) {
+        userService.saveUser(user);
+
+        return user;
+    }
+
+    @GetMapping(value = "/users")
     public List<User> getUsers() {
         return userService.getAll();
     }
 
-    @RequestMapping(value = "/sessions")
+    @GetMapping(value = "/sessions")
     public Map<String, User> getSessions() {
         return processor.getAllSessions();
     }
