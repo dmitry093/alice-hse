@@ -9,8 +9,6 @@ import ru.hse.alice.contracts.IUserService;
 import ru.hse.alice.keywords.GoodByeInterpretations;
 import ru.hse.alice.keywords.GreetingInterpretations;
 import ru.hse.alice.keywords.ShowRatingInterpretations;
-import ru.hse.alice.models.dtos.Payload;
-import ru.hse.alice.models.dtos.User;
 import ru.hse.alice.models.dtos.*;
 import ru.hse.alice.phrases.*;
 
@@ -96,7 +94,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         String command = request.getRequest().getCommand();
         User currentUser = userSessions.get(sessionId);
         if (containsKeyWord(command, ShowRatingInterpretations.keywords)) {
-            return answerRating(request, currentUser);
+            return answerRating(request, userService.getUser(currentUser.getFirstName(), currentUser.getLastName()));
         }
 
         if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
@@ -283,7 +281,22 @@ public class RatingsRequestProcessor implements IRequestProcessor {
     }
 
     @NonNull
-    private SkillWebhookResponse answerRating(@NonNull SkillWebhookRequest request, @NonNull User currentUser) {
+    private SkillWebhookResponse answerRating(@NonNull SkillWebhookRequest request, @Nullable User currentUser) {
+        if (currentUser == null) {
+            String nameOfDeleted = "";
+            String sessionId = request.getSession().getSessionId();
+            if (userSessions.containsKey(sessionId)) {
+                nameOfDeleted = userSessions.get(sessionId).getFirstName();
+                userSessions.remove(sessionId);
+            }
+            return buildResponse(
+                    request,
+                    nameOfDeleted + "! Упс! Похоже тебя удалили!",
+                    null,
+                    null,
+                    true
+            );
+        }
         Number rating = currentUser.getRating();
         if (rating != null) {
             return buildResponse(
@@ -311,7 +324,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
 
         User currentUser = userSessions.get(sessionId);
         if (Objects.equals(payload.get("button_command"), "showrating")) {
-            return answerRating(request, currentUser);
+            return answerRating(request, userService.getUser(currentUser.getFirstName(), currentUser.getLastName()));
         }
 
         if (Objects.equals(payload.get("button_command"), "adminmenu")) {
