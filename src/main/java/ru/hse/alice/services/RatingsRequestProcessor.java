@@ -8,12 +8,10 @@ import ru.hse.alice.contracts.IUserService;
 import ru.hse.alice.keywords.GoodByeInterpretations;
 import ru.hse.alice.keywords.GreetingInterpretations;
 import ru.hse.alice.keywords.ShowRatingInterpretations;
+import ru.hse.alice.models.Payload;
 import ru.hse.alice.models.User;
 import ru.hse.alice.models.dtos.*;
-import ru.hse.alice.phrases.CantFindYouPhrases;
-import ru.hse.alice.phrases.CantUnderstandYouPhrases;
-import ru.hse.alice.phrases.GoodByePhrases;
-import ru.hse.alice.phrases.GreetingPhrases;
+import ru.hse.alice.phrases.*;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
@@ -27,12 +25,10 @@ import static ru.hse.alice.helpers.PhraseHelper.getRandom;
 
 @Service
 public class RatingsRequestProcessor implements IRequestProcessor {
-    private final IUserService userService;
-    private Map<String, User> userSessions;
-
-    private static final String LOVE_TEXT = "Как блестят сейчас твои глаза!";
     private static final String LOVE_DESC = "Игорь Николаев - Выпьем за любовь";
     private static final String LOVE_PICTURE_ID = "937455/ab900f879736d57b359a";
+    private final IUserService userService;
+    private Map<String, User> userSessions;
 
     public RatingsRequestProcessor(IUserService userService) {
         if (userService == null) {
@@ -63,6 +59,16 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         return result;
     }
 
+    @Nullable
+    private Map<String, String> getNameFromResponse(List<Entity> entities) {
+        for (Entity entity : entities) {
+            if (entity.getType().equals(EntityType.YANDEX_FIO)) {
+                return (Map<String, String>) entity.getValue();
+            }
+        }
+        return null;
+    }
+
     private List<Button> generateButtons(Boolean forAdmin) {
         if (forAdmin) {
             return Collections.singletonList(new Button("Узнать свой рейтинг", new Payload("showrating")));
@@ -88,15 +94,16 @@ public class RatingsRequestProcessor implements IRequestProcessor {
 
         String command = request.getRequest().getCommand();
         String sessionId = request.getSession().getSessionId();
-        Payload payload = request.getRequest().getPayload();
+        Object payload = request.getRequest().getPayload();
 
-        if (testForLove(command)){
+        if (testForLove(command)) {
             return buildResponse(
                     request,
-                    LOVE_TEXT,
+                    getRandom(LovePhrases.phrases),
                     null,
-                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, LOVE_TEXT, LOVE_DESC),
-                    false);
+                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, getRandom(LovePhrases.phrases), LOVE_DESC),
+                    false
+            );
         }
 
 
@@ -105,35 +112,54 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 return buildResponse(
                         request,
                         "Мы же вроде бы уже поздоровались?\nХотя, с хорошим человеком это можно делать весь день!\n" +
-                                 getRandom(GreetingPhrases.phrases),
+                                getRandom(GreetingPhrases.phrases),
                         null,
                         null,
-                        false);
+                        false
+                );
             }
             if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
                 if (userSessions.containsKey(sessionId)) {
                     userSessions.remove(sessionId);
                 }
-                return buildResponse(request,
-                                     getRandom(GoodByePhrases.phrases),
-                                     null,
-                                     null,
-                                     true);
+                return buildResponse(
+                        request,
+                        getRandom(GoodByePhrases.phrases),
+                        null,
+                        null,
+                        true
+                );
             }
-            if (!userService.userExists(command)) {
+
+            Map<String, String> nameEntity = getNameFromResponse(request.getRequest().getNlu().getEntities());
+            if (nameEntity != null) {
+                String firstName = nameEntity.get("first_name");
+                String lastName = nameEntity.get("last_name");
+
+                if (!userService.userExists(firstName, lastName)) {
+                    return buildResponse(
+                            request,
+                            "Тебя зовут " + firstName + " " + lastName + "?\n" + getRandom(CantFindYouPhrases.phrases),
+                            null,
+                            null,
+                            false
+                    );
+                } else {
+                    User currentUser = userService.getUser(nameEntity.get("first_name"), nameEntity.get("last_name"));
+                    this.userSessions.put(request.getSession().getSessionId(), currentUser);
+                    return buildResponse(
+                            request,
+                            currentUser.getFirstName() + " " + currentUser.getLastName() + ", я могу выполнить следующие задачи:",
+                            generateButtons(currentUser.getIsAdmin()),
+                            null,
+                            false
+                    );
+                }
+            } else { // YANDEX.FIO not found in response
                 return buildResponse(
                         request,
-                        "Тебя зовут " + command + "?\n" + getRandom(CantFindYouPhrases.phrases),
+                        command + "?\n" + getRandom(StrangeNamePhrases.phrases),
                         null,
-                        null,
-                        false);
-            } else {
-                User currentUser = userService.getUser(command);
-                this.userSessions.put(request.getSession().getSessionId(), currentUser);
-                return buildResponse(
-                        request,
-                        currentUser.getName() + ", я могу выполнить следующие задачи:",
-                        generateButtons(currentUser.getIsAdmin()),
                         null,
                         false
                 );
@@ -143,21 +169,24 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             if (containsKeyWord(command, ShowRatingInterpretations.keywords)) {
                 return buildResponse(
                         request,
-                        currentUser.getName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
+                        currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
                         generateButtons(currentUser.getIsAdmin()),
                         null,
-                        true);
+                        true
+                );
             }
 
             if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
                 if (userSessions.containsKey(sessionId)) {
                     userSessions.remove(sessionId);
                 }
-                return buildResponse(request,
-                                     getRandom(GoodByePhrases.phrases),
-                                     null,
-                                     null,
-                                     true);
+                return buildResponse(
+                        request,
+                        getRandom(GoodByePhrases.phrases),
+                        null,
+                        null,
+                        true
+                );
             }
 
             return buildResponse(
@@ -165,12 +194,13 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                     getRandom(CantUnderstandYouPhrases.phrases),
                     generateButtons(currentUser.getIsAdmin()),
                     null,
-                    false);
+                    false
+            );
         }
     }
 
 
-    private Boolean testForLove(String command){
+    private Boolean testForLove(String command) {
         return command.toLowerCase().contains("выпьем за любовь");
     }
 }

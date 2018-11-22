@@ -1,4 +1,4 @@
-package ru.hse.alice.models.dtos;
+package ru.hse.alice.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

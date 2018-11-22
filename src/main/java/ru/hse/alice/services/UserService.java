@@ -15,25 +15,25 @@ public class UserService implements IUserService {
 
     public UserService() {
         mapUsers = new HashMap<>();
-        mapUsers.put("админ", new User("Администратор", 10.0, true));
+        mapUsers.put("дмитрийлатышев", new User("Дмитрий", "Латышев", null, true));
     }
 
     @Override
-    public Boolean userExists(String name) {
-        return mapUsers.containsKey(name.toLowerCase());
+    public Boolean userExists(String firstName, String lastName) {
+        return mapUsers.containsKey(firstName + lastName.toLowerCase());
     }
 
     @Nullable
     @Override
-    public User getUser(String name) {
-        if (!userExists(name)) {
+    public User getUser(String firstName, String lastName) {
+        if (!userExists(firstName, lastName)) {
             return null;
         }
-        return mapUsers.get(name);
+        return mapUsers.get(firstName + lastName.toLowerCase());
     }
 
     @Override
     public void addUser(@NonNull User user) {
-        mapUsers.put(user.getName().toLowerCase(), user);
+        mapUsers.put(user.getFirstName().toLowerCase() + user.getLastName().toLowerCase(), user);
     }
 }
