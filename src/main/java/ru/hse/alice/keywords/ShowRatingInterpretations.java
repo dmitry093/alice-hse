@@ -9,6 +9,7 @@ public class ShowRatingInterpretations {
     static {
         keywords.add("рейтинг");
         keywords.add("баллы");
+        keywords.add("оценка");
         keywords.add("оценки");
         keywords.add("успеваемость");
     }

@@ -7,6 +7,8 @@ public class GreetingInterpretations {
     public static final List<String> keywords = new ArrayList<>();
 
     static {
+        keywords.add("пт");
+        keywords.add("прив");
         keywords.add("привет");
         keywords.add("здорова");
         keywords.add("хай");

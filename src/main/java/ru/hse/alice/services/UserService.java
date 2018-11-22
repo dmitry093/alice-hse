@@ -15,12 +15,12 @@ public class UserService implements IUserService {
 
     public UserService() {
         mapUsers = new HashMap<>();
-        mapUsers.put("Админ", new User("Админ", 10.0, true));
+        mapUsers.put("админ", new User("Администратор", 10.0, true));
     }
 
     @Override
     public Boolean userExists(String name) {
-        return mapUsers.containsKey(name);
+        return mapUsers.containsKey(name.toLowerCase());
     }
 
     @Nullable
@@ -34,6 +34,6 @@ public class UserService implements IUserService {
 
     @Override
     public void addUser(@NonNull User user) {
-        mapUsers.put(user.getName(), user);
+        mapUsers.put(user.getName().toLowerCase(), user);
     }
 }

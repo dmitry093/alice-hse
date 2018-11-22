@@ -21,6 +21,9 @@ public class Response {
     @JsonInclude(NON_NULL)
     private List<Button> buttons;
 
+    @JsonProperty("card")
+    private Card card;
+
     @JsonProperty("end_session")
     private boolean endSession;
 }

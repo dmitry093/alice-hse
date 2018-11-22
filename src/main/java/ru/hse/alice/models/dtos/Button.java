@@ -25,8 +25,6 @@ public class Button {
     @JsonInclude(NON_NULL)
     private Boolean hide;
 
-    Button() { }
-
     public Button(@NonNull String title, @Nullable Payload payload) {
         this.title = title;
         this.payload = payload;

@@ -30,6 +30,9 @@ public class RatingsRequestProcessor implements IRequestProcessor {
     private final IUserService userService;
     private Map<String, User> userSessions;
 
+    private final static String LOVE_TEXT = "Выпьем за любовь";
+    private final static String LOVE_PICTURE_ID = "937455";
+
     public RatingsRequestProcessor(IUserService userService) {
         if (userService == null) {
             throw new IllegalArgumentException("RatingService  is null");
@@ -43,12 +46,14 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             @NotNull SkillWebhookRequest request,
             @NotNull String responseText,
             @Nullable List<Button> buttons,
+            @Nullable Card card,
             Boolean endSession
     ) {
         SkillWebhookResponse result = new SkillWebhookResponse();
         Response response = new Response();
         response.setText(responseText);
         response.setButtons(buttons);
+        response.setCard(card);
         response.setEndSession(endSession);
 
         result.setResponse(response);
@@ -74,20 +79,33 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                     request,
                     getRandom(GreetingPhrases.phrases),
                     null,
+                    null,
                     false
             );
         }
 
+
         String command = request.getRequest().getCommand();
         String sessionId = request.getSession().getSessionId();
         Payload payload = request.getRequest().getPayload();
+
+        if (testForLove(command)){
+            return buildResponse(
+                    request,
+                    LOVE_TEXT,
+                    null,
+                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, LOVE_TEXT, LOVE_TEXT),
+                    false);
+        }
+
 
         if (!userSessions.containsKey(sessionId)) { // not authorized user
             if (containsKeyWord(command, GreetingInterpretations.keywords)) {
                 return buildResponse(
                         request,
                         "Мы же вроде бы уже поздоровались?\nХотя, с хорошим человеком это можно делать весь день!\n" +
-                                getRandom(GreetingPhrases.phrases),
+                                 getRandom(GreetingPhrases.phrases),
+                        null,
                         null,
                         false);
             }
@@ -95,12 +113,17 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 if (userSessions.containsKey(sessionId)) {
                     userSessions.remove(sessionId);
                 }
-                return buildResponse(request, getRandom(GoodByePhrases.phrases), null, true);
+                return buildResponse(request,
+                                     getRandom(GoodByePhrases.phrases),
+                                     null,
+                                     null,
+                                     true);
             }
             if (!userService.userExists(command)) {
                 return buildResponse(
                         request,
                         "Тебя зовут " + command + "?\n" + getRandom(CantFindYouPhrases.phrases),
+                        null,
                         null,
                         false);
             } else {
@@ -110,6 +133,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                         request,
                         currentUser.getName() + ", я могу выполнить следующие задачи:",
                         generateButtons(currentUser.getIsAdmin()),
+                        null,
                         false
                 );
             }
@@ -120,6 +144,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                         request,
                         currentUser.getName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
                         generateButtons(currentUser.getIsAdmin()),
+                        null,
                         true);
             }
 
@@ -127,14 +152,24 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 if (userSessions.containsKey(sessionId)) {
                     userSessions.remove(sessionId);
                 }
-                return buildResponse(request, getRandom(GoodByePhrases.phrases), null, true);
+                return buildResponse(request,
+                                     getRandom(GoodByePhrases.phrases),
+                                     null,
+                                     null,
+                                     true);
             }
 
             return buildResponse(
                     request,
                     getRandom(CantUnderstandYouPhrases.phrases),
-                    generateButtons(currentUser.getIsAdmin())
-                    , false);
+                    generateButtons(currentUser.getIsAdmin()),
+                    null,
+                    false);
         }
+    }
+
+
+    private Boolean testForLove(String command){
+        return command.toLowerCase().contains("выпьем за любовь");
     }
 }
