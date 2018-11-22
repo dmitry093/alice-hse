@@ -30,8 +30,9 @@ public class RatingsRequestProcessor implements IRequestProcessor {
     private final IUserService userService;
     private Map<String, User> userSessions;
 
-    private final static String LOVE_TEXT = "Выпьем за любовь";
-    private final static String LOVE_PICTURE_ID = "937455";
+    private static final String LOVE_TEXT = "Как блестят сейчас твои глаза!";
+    private static final String LOVE_DESC = "Игорь Николаев - Выпьем за любовь";
+    private static final String LOVE_PICTURE_ID = "937455/ab900f879736d57b359a";
 
     public RatingsRequestProcessor(IUserService userService) {
         if (userService == null) {
@@ -94,7 +95,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                     request,
                     LOVE_TEXT,
                     null,
-                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, LOVE_TEXT, LOVE_TEXT),
+                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, LOVE_TEXT, LOVE_DESC),
                     false);
         }
 
