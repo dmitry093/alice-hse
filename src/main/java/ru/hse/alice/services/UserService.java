@@ -33,7 +33,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void addUser(@NonNull User user) {
+    public void saveUser(@NonNull User user) {
         mapUsers.put(user.getFirstName().toLowerCase() + user.getLastName().toLowerCase(), user);
     }
 }

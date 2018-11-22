@@ -12,6 +12,6 @@ import lombok.Setter;
 public class User {
     private String firstName;
     private String lastName;
-    private Double rating;
+    private Number rating;
     private Boolean isAdmin;
 }
