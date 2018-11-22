@@ -7,6 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class Payload {
-    @JsonProperty("lastcommand")
-    private String lastCommand;
+    @JsonProperty("button_command")
+    private String button_command;
 }

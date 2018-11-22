@@ -15,12 +15,12 @@ public class Request {
     @JsonProperty("original_utterance")
     private String originalUtterance;
 
-    @JsonProperty("type")
-    private String type;
-
     @JsonProperty("markup")
     private RequestMarkup markup;
 
     @JsonProperty("payload")
     private Object payload;
+
+    @JsonProperty("type")
+    private RequestType type;
 }

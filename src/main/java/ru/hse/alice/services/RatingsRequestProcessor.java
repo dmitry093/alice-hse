@@ -14,10 +14,7 @@ import ru.hse.alice.models.dtos.*;
 import ru.hse.alice.phrases.*;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static ru.hse.alice.helpers.PhraseHelper.containsKeyWord;
 import static ru.hse.alice.helpers.PhraseHelper.getRandom;
@@ -91,82 +88,14 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             );
         }
 
-
-        String command = request.getRequest().getCommand();
         String sessionId = request.getSession().getSessionId();
-        Object payload = request.getRequest().getPayload();
 
-        if (testForLove(command)) {
-            return buildResponse(
-                    request,
-                    getRandom(LovePhrases.phrases),
-                    null,
-                    new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, getRandom(LovePhrases.phrases), LOVE_DESC),
-                    false
-            );
-        }
+        RequestType requestType = request.getRequest().getType();
+        if (requestType == RequestType.BUTTON_PRESSED) {
+            Map<String, String> payload = (Map<String, String>) request.getRequest().getPayload();
 
-
-        if (!userSessions.containsKey(sessionId)) { // not authorized user
-            if (containsKeyWord(command, GreetingInterpretations.keywords)) {
-                return buildResponse(
-                        request,
-                        "Мы же вроде бы уже поздоровались?\nХотя, с хорошим человеком это можно делать весь день!\n" +
-                                getRandom(GreetingPhrases.phrases),
-                        null,
-                        null,
-                        false
-                );
-            }
-            if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
-                if (userSessions.containsKey(sessionId)) {
-                    userSessions.remove(sessionId);
-                }
-                return buildResponse(
-                        request,
-                        getRandom(GoodByePhrases.phrases),
-                        null,
-                        null,
-                        true
-                );
-            }
-
-            Map<String, String> nameEntity = getNameFromResponse(request.getRequest().getNlu().getEntities());
-            if (nameEntity != null) {
-                String firstName = nameEntity.get("first_name");
-                String lastName = nameEntity.get("last_name");
-
-                if (!userService.userExists(firstName, lastName)) {
-                    return buildResponse(
-                            request,
-                            "Тебя зовут " + firstName + " " + lastName + "?\n" + getRandom(CantFindYouPhrases.phrases),
-                            null,
-                            null,
-                            false
-                    );
-                } else {
-                    User currentUser = userService.getUser(nameEntity.get("first_name"), nameEntity.get("last_name"));
-                    this.userSessions.put(request.getSession().getSessionId(), currentUser);
-                    return buildResponse(
-                            request,
-                            currentUser.getFirstName() + " " + currentUser.getLastName() + ", я могу выполнить следующие задачи:",
-                            generateButtons(currentUser.getIsAdmin()),
-                            null,
-                            false
-                    );
-                }
-            } else { // YANDEX.FIO not found in response
-                return buildResponse(
-                        request,
-                        command + "?\n" + getRandom(StrangeNamePhrases.phrases),
-                        null,
-                        null,
-                        false
-                );
-            }
-        } else {
             User currentUser = userSessions.get(sessionId);
-            if (containsKeyWord(command, ShowRatingInterpretations.keywords)) {
+            if (Objects.equals(payload.get("button_command"), "showrating")) {
                 return buildResponse(
                         request,
                         currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
@@ -176,31 +105,137 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 );
             }
 
-            if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
-                if (userSessions.containsKey(sessionId)) {
-                    userSessions.remove(sessionId);
-                }
-                return buildResponse(
-                        request,
-                        getRandom(GoodByePhrases.phrases),
-                        null,
-                        null,
-                        true
-                );
-            }
-
             return buildResponse(
                     request,
-                    getRandom(CantUnderstandYouPhrases.phrases),
-                    generateButtons(currentUser.getIsAdmin()),
+                    getRandom(GreetingPhrases.phrases),
+                    null,
                     null,
                     false
             );
+        } else {
+            String command = request.getRequest().getCommand();
+
+            if (command == null){
+                return buildResponse(
+                        request,
+                        getRandom(CantUnderstandYouPhrases.phrases),
+                        null,
+                        null,
+                        false
+                );
+            }
+
+            if (testForLove(command)) {
+                return buildResponse(
+                        request,
+                        getRandom(LovePhrases.phrases),
+                        null,
+                        new Card(CardType.BIG_IMAGE, LOVE_PICTURE_ID, getRandom(LovePhrases.phrases), LOVE_DESC),
+                        false
+                );
+            }
+
+            if (!userSessions.containsKey(sessionId)) { // not authorized user
+                if (containsKeyWord(command, GreetingInterpretations.keywords)) {
+                    return buildResponse(
+                            request,
+                            "Мы же вроде бы уже поздоровались?\nХотя, с хорошим человеком это можно делать весь день!\n" +
+                                    getRandom(GreetingPhrases.phrases),
+                            null,
+                            null,
+                            false
+                    );
+                }
+                if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
+                    if (userSessions.containsKey(sessionId)) {
+                        userSessions.remove(sessionId);
+                    }
+                    return buildResponse(
+                            request,
+                            getRandom(GoodByePhrases.phrases),
+                            null,
+                            null,
+                            true
+                    );
+                }
+
+                Map<String, String> nameEntity = getNameFromResponse(request.getRequest().getNlu().getEntities());
+                if (nameEntity != null) {
+                    String firstName = nameEntity.get("first_name");
+                    String lastName = nameEntity.get("last_name");
+
+                    if (!userService.userExists(firstName, lastName)) {
+                        return buildResponse(
+                                request,
+                                "Тебя зовут " + firstName + " " + lastName + "?\n" + getRandom(CantFindYouPhrases.phrases),
+                                null,
+                                null,
+                                false
+                        );
+                    } else {
+                        User currentUser = userService.getUser(
+                                nameEntity.get("first_name"),
+                                nameEntity.get("last_name")
+                        );
+                        this.userSessions.put(request.getSession().getSessionId(), currentUser);
+                        return buildResponse(
+                                request,
+                                currentUser.getFirstName() + " " + currentUser.getLastName() + ", я могу выполнить следующие задачи:",
+                                generateButtons(currentUser.getIsAdmin()),
+                                null,
+                                false
+                        );
+                    }
+                } else { // YANDEX.FIO not found in response
+                    return buildResponse(
+                            request,
+                            command + "?\n" + getRandom(StrangeNamePhrases.phrases),
+                            null,
+                            null,
+                            false
+                    );
+                }
+            } else {
+                User currentUser = userSessions.get(sessionId);
+                if (containsKeyWord(command, ShowRatingInterpretations.keywords)) {
+                    return buildResponse(
+                            request,
+                            currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
+                            generateButtons(currentUser.getIsAdmin()),
+                            null,
+                            true
+                    );
+                }
+
+                if (containsKeyWord(command, GoodByeInterpretations.keywords)) {
+                    if (userSessions.containsKey(sessionId)) {
+                        userSessions.remove(sessionId);
+                    }
+                    return buildResponse(
+                            request,
+                            getRandom(GoodByePhrases.phrases),
+                            null,
+                            null,
+                            true
+                    );
+                }
+
+                return buildResponse(
+                        request,
+                        getRandom(CantUnderstandYouPhrases.phrases),
+                        generateButtons(currentUser.getIsAdmin()),
+                        null,
+                        false
+                );
+            }
         }
     }
 
 
-    private Boolean testForLove(String command) {
+    private Boolean testForLove(@Nullable String command) {
+        if (command == null) {
+            return false;
+        }
         return command.toLowerCase().contains("выпьем за любовь");
     }
 }

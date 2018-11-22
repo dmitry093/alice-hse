@@ -10,5 +10,5 @@ public enum EntityType {
     @JsonProperty("YANDEX.NUMBER")
     YANDEX_NUMBER,
     @JsonProperty("YANDEX.DATETIME")
-    YANDEX_DATETIME,
+    YANDEX_DATETIME;
 }

@@ -19,17 +19,29 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Boolean userExists(String firstName, String lastName) {
-        return mapUsers.containsKey(firstName + lastName.toLowerCase());
+    public Boolean userExists(@Nullable String firstName, @Nullable String lastName) {
+        if (firstName == null){
+            firstName = "";
+        }
+        if (lastName == null){
+            lastName = "";
+        }
+        return mapUsers.containsKey(firstName.toLowerCase() + lastName.toLowerCase());
     }
 
     @Nullable
     @Override
-    public User getUser(String firstName, String lastName) {
+    public User getUser(@Nullable String firstName, @Nullable String lastName) {
+        if (firstName == null){
+            firstName = "";
+        }
+        if (lastName == null){
+            lastName = "";
+        }
         if (!userExists(firstName, lastName)) {
             return null;
         }
-        return mapUsers.get(firstName + lastName.toLowerCase());
+        return mapUsers.get(firstName.toLowerCase() + lastName.toLowerCase());
     }
 
     @Override
