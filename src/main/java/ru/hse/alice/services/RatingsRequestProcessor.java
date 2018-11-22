@@ -1,6 +1,7 @@
 package ru.hse.alice.services;
 
 
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import ru.hse.alice.contracts.IRequestProcessor;
@@ -13,7 +14,6 @@ import ru.hse.alice.models.User;
 import ru.hse.alice.models.dtos.*;
 import ru.hse.alice.phrases.*;
 
-import javax.validation.constraints.NotNull;
 import java.util.*;
 
 import static ru.hse.alice.helpers.PhraseHelper.containsKeyWord;
@@ -24,8 +24,8 @@ import static ru.hse.alice.helpers.PhraseHelper.getRandom;
 public class RatingsRequestProcessor implements IRequestProcessor {
     private static final String LOVE_DESC = "Игорь Николаев - Выпьем за любовь";
     private static final String LOVE_PICTURE_ID = "937455/ab900f879736d57b359a";
-    private final IUserService userService;
     private static final String ADMIN_CODE_PHRASE = "вышка";
+    private final IUserService userService;
     private Map<String, User> userSessions;
 
     public RatingsRequestProcessor(IUserService userService) {
@@ -36,10 +36,10 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         this.userSessions = new HashMap<>();
     }
 
-    @NotNull
+    @NonNull
     private static SkillWebhookResponse buildResponse(
-            @NotNull SkillWebhookRequest request,
-            @NotNull String responseText,
+            @NonNull SkillWebhookRequest request,
+            @NonNull String responseText,
             @Nullable List<Button> buttons,
             @Nullable Card card,
             Boolean endSession
@@ -77,6 +77,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         return null;
     }
 
+    @NonNull
     private List<Button> generateButtons(Boolean forAdmin) {
         if (forAdmin) {
             return Arrays.asList(
@@ -89,7 +90,8 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         }
     }
 
-    private SkillWebhookResponse processUtteranceForAuthorized(@NotNull SkillWebhookRequest request) {
+    @NonNull
+    private SkillWebhookResponse processUtteranceForAuthorized(@NonNull SkillWebhookRequest request) {
         String sessionId = request.getSession().getSessionId();
         String command = request.getRequest().getCommand();
         User currentUser = userSessions.get(sessionId);
@@ -110,9 +112,9 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             );
         }
 
-        if (currentUser.getIsAdmin()){ // if user is admin
+        if (currentUser.getIsAdmin()) { // if user is admin
             List<String> tokens = request.getRequest().getNlu().getTokens();
-            if (tokens.contains(ADMIN_CODE_PHRASE)){
+            if (tokens.contains(ADMIN_CODE_PHRASE)) {
                 Map<String, String> nameEntity = getNameFromRequestEntities(request.getRequest().getNlu().getEntities());
                 if (nameEntity == null) {
                     return buildResponse(
@@ -128,7 +130,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 if (firstName == null) {
                     return buildResponse(
                             request,
-                            currentUser.getFirstName() + ", при добавлении пользователя необходимо указать имя.",
+                            currentUser.getFirstName() + ", при операциях над пользователем необходимо указать имя.",
                             generateButtons(currentUser.getIsAdmin()),
                             null,
                             false);
@@ -136,12 +138,12 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 if (lastName == null) {
                     return buildResponse(
                             request,
-                            currentUser.getFirstName() + ", при добавлении пользователя необходимо указать фамилию.",
+                            currentUser.getFirstName() + ", при операциях над пользователем необходимо указать фамилию.",
                             generateButtons(currentUser.getIsAdmin()),
                             null,
                             false);
                 }
-                if (tokens.contains("добавь")){
+                if (tokens.contains("добавь")) {
                     userService.saveUser(new User(firstName, lastName, null, false));
                     return buildResponse(
                             request,
@@ -151,9 +153,9 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                             false
                     );
                 }
-                if (tokens.contains("поставь")){
+                if (tokens.contains("поставь")) {
                     Number rating = getRatingFromRequestEntities(request.getRequest().getNlu().getEntities());
-                    if (rating == null){
+                    if (rating == null) {
                         return buildResponse(
                                 request,
                                 currentUser.getFirstName() + ", при обновлении рейтинга пользователя необходимо указать новое значение рейтинга.",
@@ -162,10 +164,14 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                                 false);
                     }
                     String response = "";
-                    if (!userService.userExists(firstName, lastName)){
+                    if (!userService.userExists(firstName, lastName)) {
+                        userService.saveUser(new User(firstName, lastName, rating, false));
                         response = "Пользователь " + firstName + " " + lastName + " создан.\n";
+                    } else {
+                        Boolean currentIsAdmin = userService.getUser(firstName, lastName).getIsAdmin();
+                        userService.saveUser(new User(firstName, lastName, rating, currentIsAdmin));
                     }
-                    userService.saveUser(new User(firstName, lastName, rating, false));
+
                     return buildResponse(
                             request,
                             response + "У " + firstName + " " + lastName + " рейтинг обновлен до " + rating + ".",
@@ -174,19 +180,18 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                             false
                     );
                 }
-                if (tokens.contains("назначь") && tokens.contains("администратором") || tokens.contains("админом")){
+                if (tokens.contains("назначь") && tokens.contains("администратором") || tokens.contains("админом")) {
                     String response = "";
-                    if (!userService.userExists(firstName, lastName)){
+                    if (!userService.userExists(firstName, lastName)) {
                         userService.saveUser(new User(firstName, lastName, null, true));
                         response = "Пользователь " + firstName + " " + lastName + " создан.\n";
-                    }
-                    else{
+                    } else {
                         Number currentRating = userService.getUser(firstName, lastName).getRating();
                         userService.saveUser(new User(firstName, lastName, currentRating, true));
                     }
                     return buildResponse(
                             request,
-                            response +  firstName + " " + lastName + "назначен администратором.",
+                            response + firstName + " " + lastName + " назначен администратором.",
                             generateButtons(currentUser.getIsAdmin()),
                             null,
                             false
@@ -204,7 +209,8 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         );
     }
 
-    private SkillWebhookResponse processUtteranceForNonAuthorized(@NotNull SkillWebhookRequest request) {
+    @NonNull
+    private SkillWebhookResponse processUtteranceForNonAuthorized(@NonNull SkillWebhookRequest request) {
         String sessionId = request.getSession().getSessionId();
         String command = request.getRequest().getCommand();
         if (containsKeyWord(command, GreetingInterpretations.keywords)) {
@@ -230,16 +236,17 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             );
         }
 
+        List<String> tokens = request.getRequest().getNlu().getTokens();
         Map<String, String> nameEntity = getNameFromRequestEntities(request.getRequest().getNlu().getEntities());
-        if (nameEntity != null) {
-            String firstName = nameEntity.get("first_name");
-            String lastName = nameEntity.get("last_name");
-
-            if (firstName == null) {
-                firstName = "";
-            }
-            if (lastName == null) {
-                lastName = "";
+        if (nameEntity != null || tokens.size() >= 2) {
+            String firstName = "";
+            String lastName = "";
+            if (nameEntity != null) {
+                firstName = nameEntity.get("first_name");
+                lastName = nameEntity.get("last_name");
+            } else {
+                firstName = tokens.get(0);
+                lastName = tokens.get(1);
             }
 
             if (!userService.userExists(firstName, lastName)) {
@@ -264,7 +271,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                         false
                 );
             }
-        } else { // YANDEX.FIO not found in response
+        } else { // firstname and lastname not found in request
             return buildResponse(
                     request,
                     command + "?\n" + getRandom(StrangeNamePhrases.phrases),
@@ -275,7 +282,8 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         }
     }
 
-    private SkillWebhookResponse answerRating(@NotNull SkillWebhookRequest request, @NotNull User currentUser) {
+    @NonNull
+    private SkillWebhookResponse answerRating(@NonNull SkillWebhookRequest request, @NonNull User currentUser) {
         Number rating = currentUser.getRating();
         if (rating != null) {
             return buildResponse(
@@ -296,7 +304,8 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         }
     }
 
-    private SkillWebhookResponse processPressedButton(@NotNull SkillWebhookRequest request) {
+    @NonNull
+    private SkillWebhookResponse processPressedButton(@NonNull SkillWebhookRequest request) {
         Map<String, String> payload = (Map<String, String>) request.getRequest().getPayload();
         String sessionId = request.getSession().getSessionId();
 
@@ -328,9 +337,9 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         );
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public SkillWebhookResponse process(@NotNull SkillWebhookRequest request) {
+    public SkillWebhookResponse process(@NonNull SkillWebhookRequest request) {
         if (request.getSession().isNew()) { // send greeting to new client
             return buildResponse(
                     request,
@@ -375,6 +384,11 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                 return processUtteranceForAuthorized(request);
             }
         }
+    }
+
+    @Override
+    public Map<String, User> getAllSessions() {
+        return userSessions;
     }
 
     private Boolean testForLove(@Nullable String command) {

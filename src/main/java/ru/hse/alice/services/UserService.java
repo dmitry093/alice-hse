@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import ru.hse.alice.contracts.IUserService;
 import ru.hse.alice.models.User;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -15,11 +17,22 @@ public class UserService implements IUserService {
 
     public UserService() {
         mapUsers = new HashMap<>();
-        mapUsers.put("дмитрийлатышев", new User("Дмитрий", "Латышев", null, true));
+        mapUsers.put("админадминов", new User("Админ", "Админов", null, true));
+    }
+
+    @Override
+    public List<User> getAll() {
+        return new ArrayList<>(mapUsers.values());
     }
 
     @Override
     public Boolean userExists(@Nullable String firstName, @Nullable String lastName) {
+        if (firstName == null){
+            firstName = "";
+        }
+        if (lastName == null){
+            lastName = "";
+        }
         return mapUsers.containsKey(firstName.toLowerCase() + lastName.toLowerCase());
     }
 
@@ -28,6 +41,12 @@ public class UserService implements IUserService {
     public User getUser(@Nullable String firstName, @Nullable String lastName) {
         if (!userExists(firstName, lastName)) {
             return null;
+        }
+        if (firstName == null){
+            firstName = "";
+        }
+        if (lastName == null){
+            lastName = "";
         }
         return mapUsers.get(firstName.toLowerCase() + lastName.toLowerCase());
     }
