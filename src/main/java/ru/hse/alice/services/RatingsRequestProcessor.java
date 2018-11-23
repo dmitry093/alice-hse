@@ -161,10 +161,10 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                                 null,
                                 false);
                     }
-                    String response = "";
+                    String responseText = "";
                     if (!userService.userExists(firstName, lastName)) {
                         userService.saveUser(new User(firstName, lastName, rating, false));
-                        response = "Пользователь " + firstName + " " + lastName + " создан.\n";
+                        responseText = "Пользователь " + firstName + " " + lastName + " создан.\n";
                     } else {
                         Boolean currentIsAdmin = userService.getUser(firstName, lastName).getIsAdmin();
                         userService.saveUser(new User(firstName, lastName, rating, currentIsAdmin));
@@ -172,24 +172,24 @@ public class RatingsRequestProcessor implements IRequestProcessor {
 
                     return buildResponse(
                             request,
-                            response + "У " + firstName + " " + lastName + " рейтинг обновлен до " + rating + ".",
+                            responseText + "У " + firstName + " " + lastName + " рейтинг обновлен до " + rating + ".",
                             generateButtons(currentUser.getIsAdmin()),
                             null,
                             false
                     );
                 }
                 if (tokens.contains("назначь") && tokens.contains("администратором") || tokens.contains("админом")) {
-                    String response = "";
+                    String responseText = "";
                     if (!userService.userExists(firstName, lastName)) {
                         userService.saveUser(new User(firstName, lastName, null, true));
-                        response = "Пользователь " + firstName + " " + lastName + " создан.\n";
+                        responseText = "Пользователь " + firstName + " " + lastName + " создан.\n";
                     } else {
                         Number currentRating = userService.getUser(firstName, lastName).getRating();
                         userService.saveUser(new User(firstName, lastName, currentRating, true));
                     }
                     return buildResponse(
                             request,
-                            response + firstName + " " + lastName + " назначен администратором.",
+                            responseText + firstName + " " + lastName + " назначен администратором.",
                             generateButtons(currentUser.getIsAdmin()),
                             null,
                             false
@@ -242,6 +242,12 @@ public class RatingsRequestProcessor implements IRequestProcessor {
             if (nameEntity != null) {
                 firstName = nameEntity.get("first_name");
                 lastName = nameEntity.get("last_name");
+                if (firstName == null){
+                    firstName = "";
+                }
+                if (lastName == null){
+                    lastName = "";
+                }
             } else {
                 firstName = tokens.get(0);
                 lastName = tokens.get(1);
@@ -301,7 +307,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
         if (rating != null) {
             return buildResponse(
                     request,
-                    currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?",
+                    currentUser.getFirstName() + "!\nТвой рейтинг: " + currentUser.getRating() + "\nСделать что-то еще?\nДля завершения работы - попрощайся.",
                     generateButtons(currentUser.getIsAdmin()),
                     null,
                     false
@@ -334,7 +340,7 @@ public class RatingsRequestProcessor implements IRequestProcessor {
                             "\"Добавь <имя> <фамилия>\" - я добавлю этого человека в список пользователей системы.\n\n" +
                             "\"Поставь <рейтинг> для <имя> <фамилия>\" - я обновлю рейтинг этого пользователя.\n\n" +
                             "\"Назначь <имя> <фамилия> администратором\" - я назначу этого пользователя администратором.\n\n" +
-                            "И не забудь при этом назвать пароль администратора!",
+                            "И не забудь при этом назвать пароль администратора! (" + ADMIN_CODE_PHRASE +")",
                     null,
                     null,
                     false
