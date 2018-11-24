@@ -1,4 +1,4 @@
-package ru.domru.tv.alicehse;
+package ru.hse.alice;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
